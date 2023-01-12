@@ -160,22 +160,33 @@ function putLocalStorage(city,country){
   }else{
     let cityHistory = JSON.parse(localStorage.getItem("City History"));
     cityHistory.push(cityObj);
-    localStorage.setItem("City History", JSON.stringify(cityHistory));
+    let uniqueHistory = unique(cityHistory, (a, b) => (a.city === b.city) & (a.country === b.country));
+    localStorage.setItem("City History", JSON.stringify(uniqueHistory));
   }
 }
 
 function populateHistory(){
-  let cityHistory = JSON.parse(localStorage.getItem("City History"));
-  for(let i = 0; i < cityHistory.length; i++){
-    let historyEl = document.createElement('div');
-    let cityEl = document.createElement('span');
-    cityEl.textContent = cityHistory[i].city;
+  if(localStorage.getItem("City History") !== null){
+    historyContainerEl.textContent = "";
+    let cityHistory = JSON.parse(localStorage.getItem("City History"));
+    for(let i = 0; i < cityHistory.length; i++){
+      let historyEl = document.createElement('div');
+      let cityEl = document.createElement('span');
+      let historyBtn = document.createElement('button');
 
-    //add button that calls getWeatherData() passing city and country
+      cityEl.textContent = cityHistory[i].city + ", " + cityHistory[i].country
+  
+      historyEl.appendChild(historyBtn)
+      historyEl.appendChild(cityEl);
 
-    historyEl.appendChild(cityEl);
-
-    historyContainerEl.appendChild(historyEl);
+      historyBtn.addEventListener('click', function(){
+        city = cityEl.textContent.split(', ')[0];
+        country = cityEl.textContent.split(', ')[1];
+        getWeatherData();
+      })
+  
+      historyContainerEl.appendChild(historyEl);
+    }
   }
 }
 
@@ -212,17 +223,30 @@ function getWeatherData(){
       .then(function (data) {
         console.log(data);
         putLocalStorage(city,country);
+        populateHistory();
       });
   })
   }
 
-
-
+  //removes duplicate items https://www.javascripttutorial.net/array/javascript-remove-duplicates-from-array/
+  function unique(a, fn) {
+    if (a.length === 0 || a.length === 1) {
+      return a;
+    }
+    if (!fn) {
+      return a;
+    }
   
-
-  //fetching weather object
+    for (let i = 0; i < a.length; i++) {
+      for (let j = i + 1; j < a.length; j++) {
+        if (fn(a[i], a[j])) {
+          a.splice(i, 1);
+        }
+      }
+    }
+    return a;
+  }
   
-
   //filters out city
   function cityIndex(data){
     for(let i=0; i<data.length; i++){
