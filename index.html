@@ -8,8 +8,13 @@
     <title>Document</title>
 </head>
 <body>
+<header>
+    <h1>Weather Dashboard</h1>
+</header>
 
-     <!--Make sure the form has the autocomplete function switched off:-->
+<aside>
+    <h2>Seach for a City: </h2>
+    <!--Make sure the form has the autocomplete function switched off:-->
     <form id = "user-form" autocomplete="off" action="/action_page.php">
         <div class="autocomplete" style="width:300px;">
         <input id="myInput" type="text" placeholder="City">
@@ -17,8 +22,15 @@
         <input type="submit">
     </form>
 
-    <div id="weather-card-container" class="list-group"></div>
+</aside>
+     
+
+    <div id="current-weather-container" class="list-group"></div>
     </div>
+
+    <div id="history-container"></div>
+
+    <div id="5-day-forecast-container"></div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="./Assets/js/script.js"></script>

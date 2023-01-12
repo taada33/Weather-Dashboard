@@ -1,11 +1,14 @@
 let apiKey = "cff9c13586d21e7ca05040b8bba7de34";
 let userFormEl = document.querySelector('#user-form');
 let nameInputEl = document.querySelector('#myInput');
-let weatherContainerEl = document.querySelector('#weather-card-container')
+let weatherContainerEl = document.querySelector('#current-weather-container')
+let historyContainerEl = document.querySelector('#history-container')
 
 let country;
 
 userFormEl.addEventListener('submit', formSubmitHandler);
+
+populateHistory();
 
 //fetches cityList json object containing all cities supported by openWeather
 fetch("./Assets/js/cityList.json")
@@ -146,7 +149,35 @@ function formSubmitHandler(){
   }
 }
 
+function putLocalStorage(city,country){
+  let cityObj = {
+    city: city,
+    country: country
+  };
+  if(localStorage.getItem("City History") === null){
+    let newHistory = [cityObj];
+    localStorage.setItem("City History", JSON.stringify(newHistory));
+  }else{
+    let cityHistory = JSON.parse(localStorage.getItem("City History"));
+    cityHistory.push(cityObj);
+    localStorage.setItem("City History", JSON.stringify(cityHistory));
+  }
+}
 
+function populateHistory(){
+  let cityHistory = JSON.parse(localStorage.getItem("City History"));
+  for(let i = 0; i < cityHistory.length; i++){
+    let historyEl = document.createElement('div');
+    let cityEl = document.createElement('span');
+    cityEl.textContent = cityHistory[i].city;
+
+    //add button that calls getWeatherData() passing city and country
+
+    historyEl.appendChild(cityEl);
+
+    historyContainerEl.appendChild(historyEl);
+  }
+}
 
 
 
@@ -180,6 +211,7 @@ function getWeatherData(){
     })
       .then(function (data) {
         console.log(data);
+        putLocalStorage(city,country);
       });
   })
   }
