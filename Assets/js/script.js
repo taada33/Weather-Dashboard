@@ -1,26 +1,31 @@
 let apiKey = "cff9c13586d21e7ca05040b8bba7de34";
 let userFormEl = document.querySelector('#user-form');
-let nameInputEl = document.querySelector('#username');
+let nameInputEl = document.querySelector('#myInput');
+let weatherContainerEl = document.querySelector('#weather-card-container')
 
+let country;
+
+userFormEl.addEventListener('submit', formSubmitHandler);
+
+//fetches cityList json object containing all cities supported by openWeather
 fetch("./Assets/js/cityList.json")
   .then(function (response){
     return response.json();
     
   })
   .then(function(data){
-    autocomplete(document.getElementById("myInput"), data);
+    autoComplete(document.getElementById("myInput"), data);
   })
 
 
 //modified autocomplete function (https://www.w3schools.com/howto/howto_js_autocomplete.asp) to work with openweather API's cityList.json
-function autocomplete(inp, arr) {
+function autoComplete(inp, arr) {
   /*the autocomplete function takes two arguments,
   the text field element and an array of possible autocompleted values:*/
   // variable which keeps track of the current focused (shaded) element and applies css
   var currentFocus;
   /*execute a function when someone writes in the text field:*/
   inp.addEventListener("input", function(e) {
-      console.log(this.value);
       var a, b, i, val = this.value;
       /*close any already open lists of autocompleted values*/
       closeAllLists();
@@ -45,9 +50,11 @@ function autocomplete(inp, arr) {
           /*insert a input field that will hold the current array item's value:*/
           b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
           /*execute a function when someone clicks on the item value (DIV element):*/
-              b.addEventListener("click", function(e) {
+              b.addEventListener("click", function(e,i) {
               /*insert the value for the autocomplete text field:*/
-              inp.value = this.getElementsByTagName("input")[0].value;
+              inp.value = this.textContent.split(', ')[0];
+              country = this.textContent.split(', ')[1];
+              
               /*close the list of autocompleted values,
               (or any other open lists of autocompleted values:*/
               closeAllLists();
@@ -122,59 +129,62 @@ function formSubmitHandler(){
   
   //prevents the page from reloading when the form is submitted
   event.preventDefault();
-
+  console.log(nameInputEl.value)
   //cleans up user submitted data and stores as variable username (trim() removes any excess whitespace at the beginning and end of string)
-  let city = nameInputEl.value.trim();
+  city = nameInputEl.value;
   //filters for valid username inputs
-  if (username) {
+  if (city) {
     //function call to get user repos with username parameter
-    getWeatherData(username);
+    getWeatherData(city);
     //
-    repoContainerEl.textContent = '';
+    weatherContainerEl.textContent = '';
     //clears the input field
     nameInputEl.value = '';
   } else {
     //if the username is invalid, provides alert
-    alert('Please enter a GitHub username');
+    alert('Please enter a City');
   }
 }
 
 
 
-let city = "ottawa";
-let urlGeo = "http://api.openweathermap.org/geo/1.0/direct?q=" + city + "&limit=5&appid=" + apiKey;
 
-let lat;
-let lon;
 
-//use amadeus or other api for city autocomplete
-
-// console.log(urlGeo)
 
 //fetching lat and lot of specified city
-fetch(urlGeo)
-  .then(function (response) {
+function getWeatherData(){
+  let lon;
+  let lat;
+  
+  fetch("./Assets/js/cityList.json")
+  .then(function (response){
     return response.json();
+    
   })
-  .then(function (data) {
-    console.log(data)
-    let index = cityIndex(data);
-    console.log(index)
-    lat = data[index].lat
-    lon = data[index].lon
-
-    console.log(lat + " " + lon)
-
-    let urlForecast = "http://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey;
+  .then(function(data){
+    console.log(city)
+    for(let i = 0; i < data.length; i++){
+      
+      if ((data[i].name.toLowerCase() === city.toLowerCase()) && (data[i].country === country)) {
+        console.log("here")
+        lon = data[i].coord.lon;
+        lat = data[i].coord.lat;
+        // console.log(lat + " " + lon);
+      }
+    }
+    let urlForecast = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey;
 
     fetch(urlForecast)
-  .then(function (response) {
+      .then(function (response) {
     return response.json();
+    })
+      .then(function (data) {
+        console.log(data);
+      });
   })
-  .then(function (data) {
-    console.log(data);
-  });
-  });
+  }
+
+
 
   
 
@@ -191,4 +201,4 @@ fetch(urlGeo)
     }
   }
 
-  userFormEl.addEventListener('submit', formSubmitHandler);
+  
