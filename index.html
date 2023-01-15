@@ -10,30 +10,38 @@
 <body>
 <header>
     <h1>Weather Dashboard</h1>
+
+    <div id="switch-container">
+        <label class="switch">
+            <input type="checkbox" id="check">
+            <span class="slider round"></span>
+          </label>
+    </div>
 </header>
 
-<label class="switch">
-    <input type="checkbox" id="check">
-    <span class="slider round"></span>
-  </label>
-
-<aside>
-    <h2>Search for a City: </h2>
-    <!--Make sure the form has the autocomplete function switched off:-->
-    <form id = "user-form" autocomplete="off" action="/action_page.php">
-        <div class="autocomplete" style="width:300px;">
-        <input id="myInput" type="text" placeholder="City">
+<div class="contents">
+    <aside>
+        <h2>Search for a City: </h2>
+        <!--Make sure the form has the autocomplete function switched off:-->
+        <form id = "user-form" autocomplete="off" action="/action_page.php">
+            <div class="autocomplete" style="width:300px;">
+            <input id="myInput" type="text" placeholder="City">
+            </div>
+            <input class="search" type="submit" value="Search">
+        </form>
+    
+        <div id="history-container">
         </div>
-        <input type="submit" value="Search">
-    </form>
+    </aside>
+         
+    
+        <div id="current-weather-container" class="list-group"></div>
+        </div>
+</div>
 
-</aside>
-     
 
-    <div id="current-weather-container" class="list-group"></div>
-    </div>
 
-    <div id="history-container"></div>
+    
 
     <div id="forecast-container"></div>
 
