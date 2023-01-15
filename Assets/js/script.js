@@ -3,10 +3,37 @@ let userFormEl = document.querySelector('#user-form');
 let nameInputEl = document.querySelector('#myInput');
 let weatherContainerEl = document.querySelector('#current-weather-container')
 let historyContainerEl = document.querySelector('#history-container')
+let forecastContainerEl = document.querySelector('#forecast-container')
 
-let country;
+let switchEl = document.getElementById('check')
+
+let country, forecastObj, currentWeatherObj;
+
+switchEl.classList.add("fahrenheit")
+let tempUnits = " °F";
+let speedUnits = " MPH";
 
 userFormEl.addEventListener('submit', formSubmitHandler);
+switchEl.addEventListener('change',function(){
+  if (switchEl.checked){
+    //convert to metric
+      switchEl.classList.remove("fahrenheit");
+      switchEl.classList.add("celsius");
+      tempUnits = " °C";
+      speedUnits = " KPH";
+  } else {
+    //convert to imperial
+      switchEl.classList.remove("celsius");
+      switchEl.classList.add("fahrenheit");
+      tempUnits = " °F";
+      speedUnits = " MPH";
+  }
+  displayWeatherData();
+});
+
+
+
+
 
 populateHistory();
 
@@ -160,8 +187,13 @@ function putLocalStorage(city,country){
   }else{
     let cityHistory = JSON.parse(localStorage.getItem("City History"));
     cityHistory.push(cityObj);
+    //limits the amount of cityObjs in localstorage to 8
+    if (cityHistory.length >= 9) {
+      cityHistory.splice(0, 1)
+    }
     let uniqueHistory = unique(cityHistory, (a, b) => (a.city === b.city) & (a.country === b.country));
     localStorage.setItem("City History", JSON.stringify(uniqueHistory));
+    populateHistory();
   }
 }
 
@@ -204,31 +236,98 @@ function getWeatherData(){
     
   })
   .then(function(data){
-    console.log(city)
     for(let i = 0; i < data.length; i++){
       
       if ((data[i].name.toLowerCase() === city.toLowerCase()) && (data[i].country === country)) {
-        console.log("here")
         lon = data[i].coord.lon;
         lat = data[i].coord.lat;
         // console.log(lat + " " + lon);
       }
     }
     let urlForecast = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey;
+    let urlCurrentWeather = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey;
 
     fetch(urlForecast)
       .then(function (response) {
     return response.json();
     })
       .then(function (data) {
-        console.log(data);
+        // console.log(data);
+        forecastObj = data;
         putLocalStorage(city,country);
-        populateHistory();
+
+        fetch(urlCurrentWeather)
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            // console.log(data);
+            currentWeatherObj = data;
+            displayWeatherData();
+      });
       });
   })
   }
 
-  //removes duplicate items https://www.javascripttutorial.net/array/javascript-remove-duplicates-from-array/
+  function displayWeatherData(){
+    weatherContainerEl.textContent = "";
+    let currentCityEl = document.createElement('h2')
+    let currentCityImgEl = document.createElement('img');
+    currentCityEl.textContent = city + getCurrentDate();
+    // currentCityEl.textContent = city + date + weatherstatus;
+
+    let currentWeatherEl = document.createElement('p')
+    currentWeatherEl.innerHTML = "Temp: " + convertTemp(currentWeatherObj.main.temp) + tempUnits + "<br>" + " Wind: " + convertSpeed(currentWeatherObj.wind.speed) + speedUnits + "<br>" + " Humidity: " + currentWeatherObj.main.humidity.toFixed(2) + " %";
+    currentCityImgEl.src = "http://openweathermap.org/img/wn/" + currentWeatherObj.weather[0].icon + "@2x.png";
+
+    console.log(currentWeatherObj.weather[0].icon);
+    weatherContainerEl.appendChild(currentCityEl);
+    weatherContainerEl.appendChild(currentCityImgEl);
+    weatherContainerEl.appendChild(currentWeatherEl);
+
+    forecastContainerEl.textContent = "";
+
+    for(let i = 0; i < 5; i++){
+      let forecastCardEl = document.createElement('div')
+      let forecastDateEl = document.createElement('h3')
+      let forecastWeatherEl = document.createElement('p')
+      let forecastImgEl = document.createElement('img')
+      let forecastList = [];
+      for(let j = 0; j < forecastObj.list.length; j++){
+        if(+forecastObj.list[j].dt_txt.split(' ')[0].split('-')[2] === +getCurrentDate().split('/')[0].split('(')[1]+1+i){
+          forecastList.push(forecastObj.list[j]);
+        }
+      }
+      let avgSpeed = 0;
+      let avgTemp = 0;
+      let avgHumidity = 0;
+      let conditions = [];
+      for(let k = 0; k < forecastList.length; k++){
+        avgTemp += forecastList[k].main.temp;
+        avgHumidity += forecastList[k].main.humidity;
+        avgSpeed += forecastList[k].wind.speed;
+        conditions.push(forecastList[k].weather[0].icon)
+      }
+      avgTemp = avgTemp / forecastList.length;
+      avgSpeed = avgSpeed / forecastList.length;
+      avgHumidity = avgHumidity / forecastList.length;
+
+      forecastDateEl.textContent = "(" + (+getCurrentDate().split("/")[0].split('(')[1]+ 1 + i) + getCurrentDate().slice(4);
+      forecastWeatherEl.innerHTML = "Temp: " + convertTemp(avgTemp) + tempUnits + "<br>" + " Wind: " + convertSpeed(avgSpeed) + speedUnits + "<br>" + " Humidity: " + avgHumidity.toFixed(2) + " %";
+      forecastImgEl.src = "http://openweathermap.org/img/wn/" + getMode(conditions) + "@2x.png";
+
+      forecastCardEl.appendChild(forecastDateEl);
+      forecastCardEl.appendChild(forecastImgEl);
+      forecastCardEl.appendChild(forecastWeatherEl);
+      forecastContainerEl.appendChild(forecastCardEl);
+    }
+
+    console.log(currentWeatherObj);
+    // console.log(forecastObj);
+  }
+
+  //removes duplicate items https://www.javascripttutorial.net/array/javascript-remove-duplicates-from-array/ 
+  //given array of objects and callback function
   function unique(a, fn) {
     if (a.length === 0 || a.length === 1) {
       return a;
@@ -246,15 +345,54 @@ function getWeatherData(){
     }
     return a;
   }
-  
-  //filters out city
-  function cityIndex(data){
-    for(let i=0; i<data.length; i++){
-      if(data[i].name.toLowerCase() === city.toLowerCase()){
-        console.log(i);
-        return i;
-      }
-    }
+
+  function getCurrentDate(){
+    const date = new Date();
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
+    // This arrangement can be altered based on how we want the date's format to appear.
+    return ` (${day}/${month}/${year})`;
   }
 
+  function convertTemp(temp){
+    let convertedTemp;
+    if(switchEl.classList.contains("celsius")){
+      convertedTemp = (temp-273).toFixed(2)
+    }else{
+      convertedTemp = (((temp-273)*9/5)+32).toFixed(2)  
+    }
+    return convertedTemp;
+  }
+
+  function convertSpeed(speed){
+    let convertedSpeed;
+    if(switchEl.classList.contains("celsius")){
+      convertedSpeed = speed.toFixed(2);
+    }else{
+      convertedSpeed = (speed*0.621371).toFixed(2)
+    }
+    return convertedSpeed;
+}
+
+function getMode(array) {
+  a = [];
+  for(let i = 0; i < array.length; i++){
+    if(!a[array[i]]){
+      a[array[i]] = 1;
+    }else{
+      a[array[i]] += 1;
+    }
+
+  }
+  let highestCount = 0, modeKey;
+  for(let key in a){
+    let value = a[key];
+    if(value > highestCount){
+      highestCount = value;
+      modeKey = key;
+    }
+  }
+  return modeKey;
+}
   
