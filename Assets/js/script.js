@@ -31,10 +31,6 @@ switchEl.addEventListener('change',function(){
   displayWeatherData();
 });
 
-
-
-
-
 populateHistory();
 
 //fetches cityList json object containing all cities supported by openWeather
@@ -46,7 +42,6 @@ fetch("./Assets/js/cityList.json")
   .then(function(data){
     autoComplete(document.getElementById("myInput"), data);
   })
-
 
 //modified autocomplete function (https://www.w3schools.com/howto/howto_js_autocomplete.asp) to work with openweather API's cityList.json
 function autoComplete(inp, arr) {
@@ -123,6 +118,7 @@ function autoComplete(inp, arr) {
         }
       }
   });
+
   function addActive(x) {
     /*a function to classify an item as "active":*/
     if (!x) return false;
@@ -133,6 +129,7 @@ function autoComplete(inp, arr) {
     /*add class "autocomplete-active":*/
     x[currentFocus].classList.add("autocomplete-active");
   }
+
   function removeActive(x) {
     /*a function to remove the "active" class from all autocomplete items:*/
     for (var i = 0; i < x.length; i++) {
@@ -149,6 +146,7 @@ function autoComplete(inp, arr) {
     }
   }
 }
+
 /*execute a function when someone clicks in the document:*/
 document.addEventListener("click", function (e) {
     closeAllLists(e.target);
@@ -156,7 +154,6 @@ document.addEventListener("click", function (e) {
 }
 
 function formSubmitHandler(){
-  
   //prevents the page from reloading when the form is submitted
   event.preventDefault();
   console.log(nameInputEl.value)
@@ -187,10 +184,10 @@ function putLocalStorage(city,country){
     populateHistory();
   }else{
     let cityHistory = JSON.parse(localStorage.getItem("City History"));
-    cityHistory.unshift(cityObj);
+    cityHistory.push(cityObj);
     //limits the amount of cityObjs in localstorage to 8
-    if (cityHistory.length > 8) {
-      cityHistory.splice(8, 1)
+    if (cityHistory.length >= 9) {
+      cityHistory.splice(0, 1)
     }
     let uniqueHistory = unique(cityHistory, (a, b) => (a.city === b.city) & (a.country === b.country));
     localStorage.setItem("City History", JSON.stringify(uniqueHistory));
@@ -201,7 +198,7 @@ function putLocalStorage(city,country){
 function populateHistory(){
   if(localStorage.getItem("City History") !== null){
     historyContainerEl.textContent = "";
-    let cityHistory = JSON.parse(localStorage.getItem("City History"));
+    let cityHistory = JSON.parse(localStorage.getItem("City History")).reverse();
     for(let i = 0; i < cityHistory.length; i++){
       let historyEl = document.createElement('div');
       historyEl.classList.add('history-div')
