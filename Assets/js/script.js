@@ -184,12 +184,13 @@ function putLocalStorage(city,country){
   if(localStorage.getItem("City History") === null){
     let newHistory = [cityObj];
     localStorage.setItem("City History", JSON.stringify(newHistory));
+    populateHistory();
   }else{
     let cityHistory = JSON.parse(localStorage.getItem("City History"));
-    cityHistory.push(cityObj);
+    cityHistory.unshift(cityObj);
     //limits the amount of cityObjs in localstorage to 8
-    if (cityHistory.length >= 9) {
-      cityHistory.splice(0, 1)
+    if (cityHistory.length > 8) {
+      cityHistory.splice(8, 1)
     }
     let uniqueHistory = unique(cityHistory, (a, b) => (a.city === b.city) & (a.country === b.country));
     localStorage.setItem("City History", JSON.stringify(uniqueHistory));
@@ -203,17 +204,19 @@ function populateHistory(){
     let cityHistory = JSON.parse(localStorage.getItem("City History"));
     for(let i = 0; i < cityHistory.length; i++){
       let historyEl = document.createElement('div');
-      let cityEl = document.createElement('span');
-      let historyBtn = document.createElement('button');
+      historyEl.classList.add('history-div')
 
-      cityEl.textContent = cityHistory[i].city + ", " + cityHistory[i].country
+      let historyBtn = document.createElement('input');
+      historyBtn.type = "button";
+      historyBtn.value = cityHistory[i].city + ", " + cityHistory[i].country;
+      historyBtn.classList.add("history-button");
+
   
       historyEl.appendChild(historyBtn)
-      historyEl.appendChild(cityEl);
 
       historyBtn.addEventListener('click', function(){
-        city = cityEl.textContent.split(', ')[0];
-        country = cityEl.textContent.split(', ')[1];
+        city = historyBtn.value.split(', ')[0];
+        country = historyBtn.value.split(', ')[1];
         getWeatherData();
       })
   
@@ -225,7 +228,7 @@ function populateHistory(){
 
 
 
-//fetching lat and lot of specified city
+//fetches current weather and forecast data
 function getWeatherData(){
   let lon;
   let lat;
@@ -273,6 +276,7 @@ function getWeatherData(){
     weatherContainerEl.textContent = "";
     let currentCityEl = document.createElement('h2')
     let currentCityImgEl = document.createElement('img');
+    currentCityImgEl.classList.add('currentWeatherImg');
     currentCityEl.textContent = city + getCurrentDate();
     // currentCityEl.textContent = city + date + weatherstatus;
 
@@ -280,7 +284,6 @@ function getWeatherData(){
     currentWeatherEl.innerHTML = "Temp: " + convertTemp(currentWeatherObj.main.temp) + tempUnits + "<br>" + " Wind: " + convertSpeed(currentWeatherObj.wind.speed) + speedUnits + "<br>" + " Humidity: " + currentWeatherObj.main.humidity.toFixed(2) + " %";
     currentCityImgEl.src = "http://openweathermap.org/img/wn/" + currentWeatherObj.weather[0].icon + "@2x.png";
 
-    console.log(currentWeatherObj.weather[0].icon);
     weatherContainerEl.appendChild(currentCityEl);
     weatherContainerEl.appendChild(currentCityImgEl);
     weatherContainerEl.appendChild(currentWeatherEl);
@@ -289,6 +292,7 @@ function getWeatherData(){
 
     for(let i = 0; i < 5; i++){
       let forecastCardEl = document.createElement('div')
+      forecastCardEl.classList.add('forecast-card')
       let forecastDateEl = document.createElement('h3')
       let forecastWeatherEl = document.createElement('p')
       let forecastImgEl = document.createElement('img')
@@ -321,13 +325,11 @@ function getWeatherData(){
       forecastCardEl.appendChild(forecastWeatherEl);
       forecastContainerEl.appendChild(forecastCardEl);
     }
-
-    console.log(currentWeatherObj);
-    // console.log(forecastObj);
   }
 
   //removes duplicate items https://www.javascripttutorial.net/array/javascript-remove-duplicates-from-array/ 
   //given array of objects and callback function
+  //used to remove duplicate history items
   function unique(a, fn) {
     if (a.length === 0 || a.length === 1) {
       return a;
@@ -351,7 +353,6 @@ function getWeatherData(){
     let day = date.getDate();
     let month = date.getMonth() + 1;
     let year = date.getFullYear();
-    // This arrangement can be altered based on how we want the date's format to appear.
     return ` (${day}/${month}/${year})`;
   }
 
